@@ -3,7 +3,11 @@ package action.notes;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -11,6 +15,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputFilter;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -151,7 +157,11 @@ public class MainActivity extends AppCompatActivity
                 String fileName = editText.getText().toString();
                 try {
                     File newFile;
-                    newFile = new File(System.getenv("EXTERNAL_STORAGE") + "/" + fileName);
+                    if (storage.equals("Internal Storage")) {
+                        newFile = new File(System.getenv("EXTERNAL_STORAGE") + "/" + fileName);
+                    } else {
+                        newFile = new File(System.getenv("SECONDARY_STORAGE") + "/" + fileName);
+                    }
                     newFile.createNewFile();
                     FileOutputStream fileOutputStream = new FileOutputStream(newFile);
                     OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
@@ -183,11 +193,11 @@ public class MainActivity extends AppCompatActivity
     public void saveToFileWithoutAlertDialog(String title, String writeData) {
         try {
             File newFile;
-            //if (storage.equals("Internal Storage")) {
-            newFile = new File(System.getenv("EXTERNAL_STORAGE") + "/" + title);
-            //} else {
-            //newFile = new File(System.getenv("SECONDARY_STORAGE") + "/" + title);
-            //}
+            if (storage.equals("Internal Storage")) {
+                newFile = new File(System.getenv("EXTERNAL_STORAGE") + "/" + title);
+            } else {
+                newFile = new File(System.getenv("SECONDARY_STORAGE") + "/" + title);
+            }
             newFile.createNewFile();
             FileOutputStream fileOutputStream = new FileOutputStream(newFile);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
@@ -244,11 +254,11 @@ public class MainActivity extends AppCompatActivity
                 String aBuffer = "";
                 try {
                     File myFile;
-                    //if (storage.equals("Internal Storage")) {
-                    myFile = new File(System.getenv("EXTERNAL_STORAGE") + "/" + fileName);
-                    //} else {
-                    //  myFile = new File(System.getenv("SECONDARY_STORAGE") + "/" + fileName);
-                    //}
+                    if (storage.equals("Internal Storage")) {
+                        myFile = new File(System.getenv("EXTERNAL_STORAGE") + "/" + fileName);
+                    } else {
+                        myFile = new File(System.getenv("SECONDARY_STORAGE") + "/" + fileName);
+                    }
                     FileInputStream fileInputStream = new FileInputStream(myFile);
                     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
                     while ((aDataRow = bufferedReader.readLine()) != null) {
@@ -273,5 +283,58 @@ public class MainActivity extends AppCompatActivity
         });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        final SharedPreferences sharedPreferences = PreferenceManager
+                .getDefaultSharedPreferences(getBaseContext());
+        String size = sharedPreferences.getString("text_size", null);
+        textWindow.setTextSize(TypedValue.COMPLEX_UNIT_SP, Float.parseFloat(size));
+        String typeface = sharedPreferences.getString("font_face", "Monospace");
+        if (typeface.equals("Monospace")) {
+            textWindow.setTypeface(Typeface.MONOSPACE);
+        } else if (typeface.equals("Sans-serif")) {
+            textWindow.setTypeface(Typeface.SANS_SERIF);
+        } else if (typeface.equals("Serif")) {
+            textWindow.setTypeface(Typeface.SERIF);
+        } else if (typeface.equals("Default Bold")) {
+            textWindow.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+        } else if (typeface.equals("Default Italic")) {
+            textWindow.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
+        } else if (typeface.equals("Default Bold-Italic")) {
+            textWindow.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD_ITALIC));
+        }
+        String color = sharedPreferences.getString("font_color", "Black");
+        if (color.equals("Black")) {
+            textWindow.setTextColor(Color.BLACK);
+        } else if (color.equals("Blue")) {
+            textWindow.setTextColor(Color.BLUE);
+        } else if (color.equals("Gray")) {
+            textWindow.setTextColor(Color.GRAY);
+        } else if (color.equals("Dark Gray")) {
+            textWindow.setTextColor(Color.DKGRAY);
+        } else if (color.equals("Green")) {
+            textWindow.setTextColor(Color.GREEN);
+        } else if (color.equals("Red")) {
+            textWindow.setTextColor(Color.RED);
+        } else if (color.equals("Magenta")) {
+            textWindow.setTextColor(Color.MAGENTA);
+        } else if (color.equals("Yellow")) {
+            textWindow.setTextColor(Color.YELLOW);
+        } else if (color.equals("Cyan")) {
+            textWindow.setTextColor(Color.CYAN);
+        }
+        storage = sharedPreferences.getString("storage", "Internal Storage");
+        Boolean isCapital = sharedPreferences.getBoolean("font_capital", false);
+        if (isCapital) {
+            textWindow.setFilters(new InputFilter[]{
+                    new InputFilter.AllCaps()
+            });
+        } else {
+            textWindow.setFilters(new InputFilter[]{});
+        }
+
     }
 }
