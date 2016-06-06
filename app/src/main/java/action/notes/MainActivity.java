@@ -2,6 +2,7 @@ package action.notes;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -126,6 +127,9 @@ public class MainActivity extends AppCompatActivity
             } else {
                 saveUnsavedChanges(title, newData);
             }
+        } else if (id == R.id.nav_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
 
         }
 
