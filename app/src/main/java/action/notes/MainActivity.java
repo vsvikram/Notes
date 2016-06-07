@@ -37,6 +37,9 @@ public class MainActivity extends AppCompatActivity
     String newData = "";
     EditText textWindow;
     String storage;
+    SharedPreferences mPrefs;
+    SharedPreferences.OnSharedPreferenceChangeListener mPreferenceListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +73,18 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mPreferenceListener = new PreferenceChangeListener();
+        mPrefs.registerOnSharedPreferenceChangeListener(mPreferenceListener);
+        getUpdatedSettings(mPrefs);
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mPrefs.unregisterOnSharedPreferenceChangeListener(mPreferenceListener);
     }
 
     @Override
@@ -170,6 +185,7 @@ public class MainActivity extends AppCompatActivity
                     fileOutputStream.close();
                     toolbar.setTitle(fileName);
                     Toast.makeText(getApplicationContext(), "File Saved", Toast.LENGTH_SHORT).show();
+                    newData = textWindow.getText().toString();
                     data = newData;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -285,14 +301,18 @@ public class MainActivity extends AppCompatActivity
         alertDialog.show();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        final SharedPreferences sharedPreferences = PreferenceManager
-                .getDefaultSharedPreferences(getBaseContext());
-        String size = sharedPreferences.getString("text_size", null);
+    private class PreferenceChangeListener implements SharedPreferences.OnSharedPreferenceChangeListener {
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+            getUpdatedSettings(prefs);
+        }
+    }
+
+    public void getUpdatedSettings(SharedPreferences prefs) {
+        String size = prefs.getString("text_size", "15");
         textWindow.setTextSize(TypedValue.COMPLEX_UNIT_SP, Float.parseFloat(size));
-        String typeface = sharedPreferences.getString("font_face", "Monospace");
+
+        String typeface = prefs.getString("font_face", "Monospace");
         if (typeface.equals("Monospace")) {
             textWindow.setTypeface(Typeface.MONOSPACE);
         } else if (typeface.equals("Sans-serif")) {
@@ -306,7 +326,7 @@ public class MainActivity extends AppCompatActivity
         } else if (typeface.equals("Default Bold-Italic")) {
             textWindow.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD_ITALIC));
         }
-        String color = sharedPreferences.getString("font_color", "Black");
+        String color = prefs.getString("font_color", "Black");
         if (color.equals("Black")) {
             textWindow.setTextColor(Color.BLACK);
         } else if (color.equals("Blue")) {
@@ -326,8 +346,8 @@ public class MainActivity extends AppCompatActivity
         } else if (color.equals("Cyan")) {
             textWindow.setTextColor(Color.CYAN);
         }
-        storage = sharedPreferences.getString("storage", "Internal Storage");
-        Boolean isCapital = sharedPreferences.getBoolean("font_capital", false);
+
+        Boolean isCapital = prefs.getBoolean("font_capital", false);
         if (isCapital) {
             textWindow.setFilters(new InputFilter[]{
                     new InputFilter.AllCaps()
@@ -336,5 +356,7 @@ public class MainActivity extends AppCompatActivity
             textWindow.setFilters(new InputFilter[]{});
         }
 
+        storage = prefs.getString("storage", "Internal Storage");
     }
+
 }
